@@ -1,0 +1,6 @@
+{
+  "name": "سوق السعادة",
+  "description": "متجر إلكتروني إبداعي تفاعلي مع مساعد ذكي ومنظومة أسعار وتوصيل مخصصة للعراق",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
