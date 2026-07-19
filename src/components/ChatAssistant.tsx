@@ -171,7 +171,7 @@ export default function ChatAssistant({ products = [], onSelectProduct, onOrderP
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="bg-[#1e222d] border border-[#2a2e39] rounded-3xl w-[350px] sm:w-[400px] h-[520px] flex flex-col shadow-[0_15px_40px_rgba(0,0,0,0.6)] overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className="bg-[#1e222d] border border-[#2a2e39] rounded-3xl w-[calc(100vw-3rem)] sm:w-[400px] h-[65vh] sm:h-[520px] max-h-[600px] flex flex-col shadow-[0_15px_40px_rgba(0,0,0,0.6)] overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-300">
           
           {/* Header */}
           <div className="bg-[#ff9800] p-4 flex items-center justify-between text-[#131722]">

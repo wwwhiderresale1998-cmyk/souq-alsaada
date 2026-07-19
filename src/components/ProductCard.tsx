@@ -93,7 +93,7 @@ export default function ProductCard({
             <Truck className="w-3.5 h-3.5 animate-bounce" />
             <span>خلال 24 ساعة</span>
           </div>
-          <div className="bg-[#131722]/85 border border-emerald-500/30 text-emerald-400 text-[9px] sm:text-[10px] font-black px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg shadow-md flex items-center gap-1 backdrop-blur-sm">
+          <div className="bg-[#131722]/85 border border-emerald-500/30 text-emerald-400 text-[9px] sm:text-[10px] font-black px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg shadow-md flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
             <span>ضمان استرجاع أسبوع</span>
           </div>
@@ -108,7 +108,7 @@ export default function ProductCard({
 
         {/* Photo Album Badge */}
         {product.images && product.images.length > 1 && (
-          <div className={`absolute ${product.discount ? "top-14" : "top-3"} left-3 bg-[#131722]/80 border border-[#2a2e39] text-[#d1d4dc] text-[9px] font-bold px-2 py-1 rounded-lg backdrop-blur-sm flex items-center gap-1 z-10`}>
+          <div className={`absolute ${product.discount ? "top-14" : "top-3"} left-3 bg-[#131722]/80 border border-[#2a2e39] text-[#d1d4dc] text-[9px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 z-10`}>
             <span className="w-1.5 h-1.5 bg-[#ff9800] rounded-full animate-pulse" />
             <span>{product.images.length} صور</span>
           </div>
@@ -122,7 +122,7 @@ export default function ProductCard({
               e.stopPropagation();
               onZoomImage(optimizedSrc);
             }}
-            className="absolute bottom-3 left-3 bg-[#131722]/60 hover:bg-[#ff9800] text-white hover:text-[#131722] p-2 rounded-xl backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 z-20 cursor-pointer shadow-md"
+            className="absolute bottom-3 left-3 bg-[#131722]/80 hover:bg-[#ff9800] text-white hover:text-[#131722] p-2 rounded-xl transition-all opacity-0 group-hover:opacity-100 z-20 cursor-pointer shadow-md"
             title="تكبير الصورة"
           >
             <ZoomIn className="w-4 h-4" />

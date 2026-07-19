@@ -127,6 +127,13 @@ export default function App() {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCartCheckoutOpen, setIsCartCheckoutOpen] = useState(false);
+  
+  // Pagination state for mobile performance
+  const [visibleCount, setVisibleCount] = useState(24);
+
+  useEffect(() => {
+    setVisibleCount(24);
+  }, [activeCategory, searchQuery, showFavoritesOnly]);
 
   useEffect(() => {
     if (currentUser) {
@@ -693,10 +700,10 @@ export default function App() {
                   {currentUser && (
                     <button
                       onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                      className={`fixed bottom-6 left-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full border text-sm font-bold transition-all shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-md hover:-translate-y-1 ${
+                      className={`fixed bottom-6 left-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full border text-sm font-bold transition-all shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:-translate-y-1 ${
                         showFavoritesOnly 
-                          ? "bg-rose-500/90 border-rose-400 text-white hover:bg-rose-600" 
-                          : "bg-[#1e222d]/90 border-[#2a2e39] text-rose-400 hover:border-gray-500 hover:text-white"
+                          ? "bg-rose-500 border-rose-400 text-white hover:bg-rose-600" 
+                          : "bg-[#1e222d] border-[#2a2e39] text-rose-400 hover:border-gray-500 hover:text-white"
                       }`}
                     >
                       <Heart className={`w-5 h-5 ${showFavoritesOnly ? "fill-current" : ""}`} />
@@ -735,23 +742,36 @@ export default function App() {
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onSelect={(p) => handleSelectProduct(p)}
-                      onOrder={(p) => setSelectedProductForOrder(p)}
-                      onAddToCart={handleAddToCart}
-                      onZoomImage={setZoomedImage}
-                      isAdminAuthenticated={isAdminAuthenticated}
-                      onEnhanceDescription={handleEnhanceDescription}
-                      isEnhancing={enhancingProductId === product.id}
-                      isFavorite={favoriteIds.includes(product.id)}
-                      onToggleFavorite={handleToggleFavorite}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredProducts.slice(0, visibleCount).map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onSelect={(p) => handleSelectProduct(p)}
+                        onOrder={(p) => setSelectedProductForOrder(p)}
+                        onAddToCart={handleAddToCart}
+                        onZoomImage={setZoomedImage}
+                        isAdminAuthenticated={isAdminAuthenticated}
+                        onEnhanceDescription={handleEnhanceDescription}
+                        isEnhancing={enhancingProductId === product.id}
+                        isFavorite={favoriteIds.includes(product.id)}
+                        onToggleFavorite={handleToggleFavorite}
+                      />
+                    ))}
+                  </div>
+                  
+                  {visibleCount < filteredProducts.length && (
+                    <div className="mt-8 flex justify-center">
+                      <button
+                        onClick={() => setVisibleCount(prev => prev + 24)}
+                        className="bg-[#1e222d] border border-[#2a2e39] hover:border-[#ff9800] text-[#d1d4dc] hover:text-[#ff9800] font-bold py-3 px-8 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                      >
+                        عرض المزيد
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
