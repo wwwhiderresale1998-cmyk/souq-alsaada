@@ -930,6 +930,23 @@ export default function App() {
                             className={`w-full h-full object-contain p-4 transition-all duration-300 ${isModalImgLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
                           />
 
+                          {/* Favorite Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleFavorite(selectedProductDetails);
+                            }}
+                            className={`absolute bottom-3 left-3 w-10 h-10 rounded-full flex items-center justify-center transition-all z-20 cursor-pointer border shadow-md backdrop-blur-sm ${
+                              favoriteIds.includes(selectedProductDetails.id)
+                                ? "bg-rose-500 border-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.4)]" 
+                                : "bg-black/40 border-white/20 text-white hover:bg-rose-500/80 hover:border-rose-500"
+                            }`}
+                            title="إضافة للمفضلة"
+                          >
+                            <Heart className={`w-5 h-5 ${favoriteIds.includes(selectedProductDetails.id) ? "fill-current" : ""}`} />
+                          </button>
+
                           {/* Zoom Image Button */}
                           <button
                             type="button"
@@ -937,7 +954,7 @@ export default function App() {
                               e.stopPropagation();
                               setZoomedImage(modalImages[activeImageIndex]);
                             }}
-                            className="absolute bottom-3 right-3 bg-[#131722]/60 hover:bg-[#ff9800] text-white hover:text-[#131722] p-2.5 rounded-xl backdrop-blur-sm transition-all opacity-0 group-hover/gallery:opacity-100 z-20 cursor-pointer shadow-md"
+                            className="absolute bottom-3 left-16 w-10 h-10 rounded-full flex items-center justify-center bg-black/40 border border-white/20 text-white hover:bg-[#ff9800] hover:border-[#ff9800] hover:text-[#131722] transition-all sm:opacity-0 sm:group-hover/gallery:opacity-100 opacity-100 z-20 cursor-pointer shadow-md backdrop-blur-sm"
                             title="تكبير الصورة"
                           >
                             <ZoomIn className="w-5 h-5" />

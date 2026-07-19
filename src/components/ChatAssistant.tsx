@@ -224,7 +224,7 @@ export default function ChatAssistant({ products = [], onSelectProduct, onOrderP
                               {onZoomImage && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); onZoomImage(product.image); }}
-                                  className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg cursor-pointer"
+                                  className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity rounded-lg cursor-pointer"
                                   title="تكبير الصورة"
                                 >
                                   <ZoomIn className="w-4 h-4 text-white" />

@@ -100,7 +100,7 @@ export default function CartDrawer({
                     {onZoomImage && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onZoomImage(item.product.image); }}
-                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/cartImg:opacity-100 transition-opacity rounded-xl cursor-pointer"
+                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/cartImg:opacity-100 transition-opacity rounded-xl cursor-pointer"
                         title="تكبير الصورة"
                       >
                         <ZoomIn className="w-4 h-4 text-white" />
