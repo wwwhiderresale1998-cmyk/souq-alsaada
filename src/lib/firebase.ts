@@ -19,15 +19,9 @@ googleProvider.addScope('email');
 googleProvider.addScope('profile');
 
 export const signInWithGoogle = async () => {
-  // Use popup on localhost (faster UX), redirect on production.
-  // COOP headers are set to unsafe-none in vite.config.ts to allow popup communication.
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } else {
-    await signInWithRedirect(auth, googleProvider);
-    return null;
-  }
+  // Always use popup so we can catch errors directly, especially unauthorized domain errors.
+  const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
 };
 
 export { getRedirectResult };

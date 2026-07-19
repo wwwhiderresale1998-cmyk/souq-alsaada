@@ -49,9 +49,7 @@ interface HeaderProps {
   isLoggingIn?: boolean;
   onLogout: () => void;
   onToggleFavorites: () => void;
-  showFavoritesOnly: boolean;
   onToggleOrders: () => void;
-  showUserOrders: boolean;
 }
 
 function getCategoryImage(cat: Category | null): string {
@@ -119,9 +117,7 @@ export default function Header({
   isLoggingIn = false,
   onLogout,
   onToggleFavorites,
-  showFavoritesOnly,
-  onToggleOrders,
-  showUserOrders
+  onToggleOrders
 }: HeaderProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -282,139 +278,43 @@ export default function Header({
 
             {/* Controls Container */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Mobile Hamburger Menu Button */}
+              {/* Hamburger Menu Button - All Screens */}
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="flex md:hidden items-center justify-center p-2 rounded-xl bg-[#2a2e39] text-white hover:bg-[#ff9800] transition-colors"
+                className="flex items-center justify-center p-2.5 rounded-xl bg-[#2a2e39] text-white hover:bg-[#ff9800] hover:text-[#131722] transition-all duration-200"
+                title="القائمة"
               >
                 <Menu className="w-5 h-5" />
               </button>
 
-              {/* User Profile & Account Controls */}
               {currentUser ? (
-                <div className="relative" ref={profileMenuRef}>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsProfileMenuOpen(!isProfileMenuOpen);
-                    }}
-                    className={`flex items-center gap-3 bg-[#2a2e39]/50 border px-2 py-1.5 rounded-2xl transition-all cursor-pointer group ${
-                      isProfileMenuOpen ? "border-[#ff9800] bg-[#2a2e39]" : "border-[#2a2e39] hover:border-[#ff9800]/50"
-                    }`}
-                  >
-                    <ChevronDown className={`w-3.5 h-3.5 text-[#787b86] transition-transform duration-300 ${isProfileMenuOpen ? "rotate-180" : ""}`} />
-                    <div className="hidden sm:flex flex-col items-end text-right">
-                      <span className="text-[10px] font-bold text-[#ff9800]">حسابي</span>
-                      <span className="text-xs font-black text-white truncate max-w-[100px]">
-                        {currentUser.displayName?.split(' ')[0] || "المستخدم"}
-                      </span>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl overflow-hidden border border-[#2a2e39] group-hover:border-[#ff9800]/30 transition-all">
-                      {currentUser.photoURL ? (
-                        <img src={currentUser.photoURL} alt={currentUser.displayName || ""} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2a2e39] to-[#1e222d]">
-                          <UserIcon className="w-5 h-5 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {isProfileMenuOpen && (
-                    <div className="absolute top-full left-0 mt-3 w-64 bg-[#1e222d] border border-[#2a2e39] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="p-4 bg-[#171b26] border-b border-[#2a2e39] text-right">
-                        <p className="text-xs font-black text-white">{currentUser.displayName || "مستخدم السعادة"}</p>
-                        <p className="text-[10px] text-[#787b86] mt-0.5 truncate">{currentUser.email}</p>
+                /* Logged-in: show avatar only (menu in sidebar) */
+                <button
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl bg-[#2a2e39]/80 border border-[#2a2e39] hover:border-[#ff9800]/40 transition-all group cursor-pointer"
+                  title="حسابي"
+                >
+                  <div className="hidden sm:flex flex-col items-end text-right">
+                    <span className="text-[10px] font-bold text-[#ff9800]">حسابي</span>
+                    <span className="text-xs font-black text-white truncate max-w-[80px]">
+                      {currentUser.displayName?.split(' ')[0] || "المستخدم"}
+                    </span>
+                  </div>
+                  <div className="w-9 h-9 rounded-lg overflow-hidden border border-[#2a2e39] group-hover:border-[#ff9800]/40 transition-all shrink-0">
+                    {currentUser.photoURL ? (
+                      <img src={currentUser.photoURL} alt={currentUser.displayName || ""} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2a2e39] to-[#1e222d]">
+                        <UserIcon className="w-4 h-4 text-gray-400" />
                       </div>
-
-                      <div className="p-2 space-y-1">
-                        {/* Favorites */}
-                        <button
-                          onClick={() => {
-                            onToggleFavorites();
-                            setIsProfileMenuOpen(false);
-                          }}
-                          className="w-full flex items-center justify-between p-3 rounded-xl transition-all text-gray-300 hover:bg-[#2a2e39] hover:text-rose-400"
-                        >
-                          <Heart className="w-4.5 h-4.5" />
-                          <span className="text-xs font-bold">منتجاتي المفضلة</span>
-                        </button>
-
-                        {/* Order History */}
-                        <button
-                          onClick={() => {
-                            onToggleOrders();
-                            setIsProfileMenuOpen(false);
-                          }}
-                          className="w-full flex items-center justify-between p-3 rounded-xl transition-all text-gray-300 hover:bg-[#2a2e39] hover:text-[#ff9800]"
-                        >
-                          <Clock className="w-4.5 h-4.5" />
-                          <span className="text-xs font-bold">سجل الطلبات</span>
-                        </button>
-
-                        {/* WhatsApp Support */}
-                        <a
-                          href="https://wa.me/9647866400289"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full flex items-center justify-between p-3 rounded-xl text-gray-300 hover:bg-[#2a2e39] hover:text-emerald-400 transition-all"
-                        >
-                          <MessageCircle className="w-4.5 h-4.5" />
-                          <span className="text-xs font-bold">تواصل مع الدعم</span>
-                        </a>
-
-                        <div className="h-px bg-[#2a2e39] my-2 mx-2" />
-
-                        {/* Logout Section */}
-                        {showLogoutConfirm ? (
-                          <div className="m-1 p-3 bg-rose-500/5 rounded-xl border border-rose-500/20 animate-in zoom-in-95 duration-200">
-                            <div className="flex items-center justify-center gap-2 text-rose-400 mb-3">
-                              <AlertCircle className="w-4 h-4" />
-                              <p className="text-[10px] font-black">هل تريد الخروج؟</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onLogout();
-                                }}
-                                className="flex-1 bg-rose-500 text-white text-[10px] font-black py-2 rounded-lg hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20"
-                              >
-                                نعم، خروج
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowLogoutConfirm(false);
-                                }}
-                                className="flex-1 bg-[#2a2e39] text-gray-300 text-[10px] font-black py-2 rounded-lg hover:text-white transition-colors"
-                              >
-                                إلغاء
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowLogoutConfirm(true);
-                            }}
-                            className="w-full flex items-center justify-between p-3 rounded-xl text-rose-400 hover:bg-rose-500/10 transition-all group"
-                          >
-                            <LogOut className="w-4.5 h-4.5 group-hover:-translate-x-1 transition-transform" />
-                            <span className="text-xs font-bold">تسجيل الخروج</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </button>
               ) : (
                 <button
                   onClick={onLogin}
                   disabled={isLoggingIn}
-                  className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all duration-300 border bg-gradient-to-r from-[#ff9800] to-[#ffa726] text-[#131722] border-transparent hover:shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95 ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all duration-300 border bg-gradient-to-r from-[#ff9800] to-[#ffa726] text-[#131722] border-transparent hover:shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95 ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   {isLoggingIn ? (
                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -638,7 +538,7 @@ export default function Header({
 
       {/* Mobile Sidebar Menu (Drawer) */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[100] md:hidden">
+        <div className="fixed inset-0 z-[100]">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -646,12 +546,31 @@ export default function Header({
           />
           
           {/* Drawer */}
-          <div className="absolute top-0 right-0 bottom-0 w-[80%] max-w-sm bg-[#1e222d] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="p-4 border-b border-[#2a2e39] flex items-center justify-between">
-              <span className="font-black text-[#ff9800] text-lg">سوق السعادة</span>
+          <div className="absolute top-0 right-0 bottom-0 w-[85%] max-w-xs sm:max-w-sm bg-[#1e222d] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-[#2a2e39] flex items-center justify-between bg-[#171b26]">
+              {currentUser ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-[#ff9800]/30 shrink-0">
+                    {currentUser.photoURL ? (
+                      <img src={currentUser.photoURL} alt={currentUser.displayName || ""} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2a2e39] to-[#1e222d]">
+                        <UserIcon className="w-5 h-5 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-black text-white text-sm">{currentUser.displayName || "مستخدم السعادة"}</p>
+                    <p className="text-[10px] text-[#787b86] truncate max-w-[150px]">{currentUser.email}</p>
+                  </div>
+                </div>
+              ) : (
+                <span className="font-black text-[#ff9800] text-lg">سوق السعادة</span>
+              )}
               <button 
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 bg-[#2a2e39] text-gray-400 hover:text-white rounded-xl"
+                className="p-2 bg-[#2a2e39] text-gray-400 hover:text-white rounded-xl transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>

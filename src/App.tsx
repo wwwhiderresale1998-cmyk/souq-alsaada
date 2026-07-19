@@ -545,9 +545,7 @@ export default function App() {
         isLoggingIn={isLoggingIn}
         onLogout={handleLogout}
         onToggleFavorites={() => setShowFavoritesDrawer(true)}
-        showFavoritesOnly={false}
         onToggleOrders={() => setShowOrdersDrawer(true)}
-        showUserOrders={false}
       />
 
       {/* Auth/DB Error Toast */}
