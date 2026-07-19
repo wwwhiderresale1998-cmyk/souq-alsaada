@@ -35,8 +35,17 @@ const QUEUE_FILE_PATH = path.join(process.cwd(), "queue.json");
 let externalOrderQueue: any[] = [];
 let rateLimitUntil = 0;
 
-function loadQueue() {
+async function loadQueue() {
   try {
+    const firestore = db();
+    if (firestore) {
+      const doc = await firestore.collection('queue_data').doc('queue').get();
+      if (doc.exists) {
+        externalOrderQueue = doc.data()?.items || [];
+        return;
+      }
+    }
+
     if (fs.existsSync(QUEUE_FILE_PATH)) {
       const data = fs.readFileSync(QUEUE_FILE_PATH, "utf-8");
       externalOrderQueue = JSON.parse(data);
@@ -46,17 +55,21 @@ function loadQueue() {
   }
 }
 
-function saveQueue() {
+async function saveQueue() {
   try {
+    const firestore = db();
+    if (firestore) {
+      await firestore.collection('queue_data').doc('queue').set({ items: externalOrderQueue });
+    }
     fs.writeFileSync(QUEUE_FILE_PATH, JSON.stringify(externalOrderQueue, null, 2));
   } catch (err) {
     console.error("Failed to save queue:", err);
   }
 }
 
-function enqueueExternalOrder(payload: any) {
+async function enqueueExternalOrder(payload: any) {
   externalOrderQueue.push(payload);
-  saveQueue();
+  await saveQueue();
   console.log(`[Queue] Order added. Queue length: ${externalOrderQueue.length}`);
 }
 
@@ -193,8 +206,9 @@ async function processOrderQueue() {
       if (payload.local_order_id) {
          const oIdx = orders.findIndex(o => o.id === payload.local_order_id);
          if (oIdx !== -1) {
-             orders[oIdx].status = 'completed';
-             saveOrdersToFile();
+              orders[oIdx].status = "completed";
+              await saveOrder(orders[oIdx]);
+              saveOrdersToFile();
          }
       }
 
@@ -248,7 +262,7 @@ async function processOrderQueue() {
 }
 
 // Start queue processor
-loadQueue();
+// loadQueue is now called inside populateCaches
 setInterval(processOrderQueue, 10000); // Check queue every 10 seconds
 
 // --- END QUEUE SYSTEM ---
@@ -274,8 +288,18 @@ let productsCache: Product[] = [];
 let orders: Order[] = [];
 
 // Load and Save File-based persistence
-function loadOrders(): Order[] | null {
+async function loadOrders(): Promise<Order[] | null> {
   try {
+    const firestore = db();
+    if (firestore) {
+      const snapshot = await firestore.collection('orders').get();
+      if (!snapshot.empty) {
+        const firestoreOrders: Order[] = [];
+        snapshot.forEach((doc: any) => firestoreOrders.push(doc.data() as Order));
+        return firestoreOrders;
+      }
+    }
+
     if (fs.existsSync(ORDERS_FILE_PATH)) {
       const data = fs.readFileSync(ORDERS_FILE_PATH, "utf-8");
       return JSON.parse(data);
@@ -284,6 +308,17 @@ function loadOrders(): Order[] | null {
     console.error("Error loading orders file:", err);
   }
   return null;
+}
+
+async function saveOrder(order: Order) {
+  try {
+    const firestore = db();
+    if (firestore) {
+      await firestore.collection('orders').doc(order.id).set(order);
+    }
+  } catch (err) {
+    console.error("Error saving order to firestore:", err);
+  }
 }
 
 function saveOrdersToFile() {
@@ -539,15 +574,18 @@ async function populateCaches() {
     }
 
     // 4. Load or generate orders
-    const loadedOrders = loadOrders();
+    const loadedOrders = await loadOrders();
     if (loadedOrders && loadedOrders.length > 0) {
       orders = loadedOrders;
-      console.log(`[سوق السعادة] تم استرجاع ${orders.length} طلب من ملف الحفظ بنجاح.`);
+      console.log(`[سوق السعادة] تم استرجاع ${orders.length} طلب بنجاح.`);
     } else {
       orders = [];
       saveOrdersToFile();
       console.log("[سوق السعادة] تم بدء النظام بقائمة طلبيات فارغة.");
     }
+    
+    // 5. Load queue data
+    await loadQueue();
 
   } catch (err) {
     console.error("[سوق السعادة] خطأ في التحميل المسبق على الإقلاع:", err);
@@ -781,6 +819,7 @@ app.post("/api/add-simple-order", async (req: Request, res: Response) => {
     };
 
     orders.unshift(newOrder);
+    saveOrder(newOrder);
     saveOrdersToFile(); // Disk persist
 
     res.json({
@@ -859,6 +898,7 @@ app.post("/api/add-cart-order", async (req: Request, res: Response) => {
       };
 
       orders.unshift(newOrder);
+      saveOrder(newOrder);
       submittedOrdersList.push(newOrder);
     }
     
@@ -1137,6 +1177,7 @@ app.put("/api/admin/order-status", (req: Request, res: Response) => {
     return;
   }
   order.status = status;
+  saveOrder(order);
   saveOrdersToFile(); // Persist changes
   res.json({ success: true, order });
 });
