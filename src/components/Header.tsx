@@ -548,31 +548,40 @@ export default function Header({
           {/* Panel Wrapper */}
           <div className="absolute inset-y-0 right-0 max-w-full flex">
             {/* Drawer */}
-            <div className="w-screen max-w-xs sm:max-w-sm bg-[#1e222d] border-l border-[#2a2e39] text-white flex flex-col shadow-[-25px_0_60px_rgba(0,0,0,0.5)] animate-in slide-in-from-right duration-300">
+            <div className="w-screen max-w-md bg-[#1e222d] border-l border-[#2a2e39] text-white flex flex-col shadow-[-25px_0_60px_rgba(0,0,0,0.5)] animate-in slide-in-from-right duration-300">
             {/* Drawer Header */}
-            <div className="p-4 border-b border-[#2a2e39] flex items-center justify-between bg-[#171b26]">
+            <div className="p-6 border-b border-[#2a2e39] flex items-center justify-between">
               {currentUser ? (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl overflow-hidden border border-[#ff9800]/30 shrink-0">
                     {currentUser.photoURL ? (
                       <img src={currentUser.photoURL} alt={currentUser.displayName || ""} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2a2e39] to-[#1e222d]">
-                        <UserIcon className="w-5 h-5 text-gray-400" />
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2a2e39] to-[#1e222d] text-[#ff9800]">
+                        <UserIcon className="w-5 h-5" />
                       </div>
                     )}
                   </div>
-                  <div className="text-right">
-                    <p className="font-black text-white text-sm">{currentUser.displayName || "مستخدم السعادة"}</p>
-                    <p className="text-[10px] text-[#787b86] truncate max-w-[150px]">{currentUser.email}</p>
+                  <div>
+                    <h3 className="font-black text-base text-white">{currentUser.displayName || "مستخدم السعادة"}</h3>
+                    <p className="text-[10px] text-[#787b86] font-bold truncate max-w-[200px]">{currentUser.email}</p>
                   </div>
                 </div>
               ) : (
-                <span className="font-black text-[#ff9800] text-lg">سوق السعادة</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#ff9800]/10 border border-[#ff9800]/20 rounded-xl flex items-center justify-center text-[#ff9800]">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-base text-white">حسابي</h3>
+                    <p className="text-[10px] text-[#787b86] font-bold">تسجيل الدخول / إدارة الحساب</p>
+                  </div>
+                </div>
               )}
+              
               <button 
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 bg-[#2a2e39] text-gray-400 hover:text-white rounded-xl transition-colors"
+                className="text-gray-400 hover:text-white bg-[#131722]/50 hover:bg-[#2a2e39] p-2.5 rounded-xl transition"
               >
                 <X className="w-5 h-5" />
               </button>
