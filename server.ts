@@ -1358,16 +1358,14 @@ ${productsCache.map(p => `- ${p.title} (${p.price} دينار) [PRODUCT:${p.id}]
 مثال: "عيوني متوفرة عندنا ساعة كذا وسعرها 15000 دينار [PRODUCT:1234]"
     `;
 
-    // Convert past messages to Gemini format if needed, but for simplicity we'll just send the current interaction
-    const chat = ai.chats.create({
+    const responseStream = await ai.models.generateContentStream({
       model: 'gemini-2.5-flash',
+      contents: userMessage,
       config: {
         systemInstruction: systemPrompt,
         temperature: 0.7,
       }
     });
-
-    const responseStream = await chat.sendMessageStream(userMessage);
 
     for await (const chunk of responseStream) {
       if (chunk.text) {
