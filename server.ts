@@ -442,25 +442,36 @@ function getIconForCategoryName(name: string): string {
   return "Layers";
 }
 
-// Lazy-initialized Gemini Client
-let geminiClient: any = null;
+// Lazy-initialized Gemini Clients array
+let geminiClients: any[] = [];
+let initializedGemini = false;
+
 function getGemini(): GoogleGenAI | null {
-  if (!geminiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+  if (!initializedGemini) {
+    initializedGemini = true;
+    const apiKeysRaw = process.env.GEMINI_API_KEY;
+    if (!apiKeysRaw || apiKeysRaw === "MY_GEMINI_API_KEY") {
       console.warn("⚠️ GEMINI_API_KEY is missing. Simulated AI mode active.");
       return null;
     }
-    geminiClient = new GoogleGenAI({
-      apiKey: apiKey,
+    
+    // Split by comma in case there are multiple keys
+    const apiKeys = apiKeysRaw.split(',').map(k => k.trim()).filter(k => k.length > 0);
+    geminiClients = apiKeys.map(key => new GoogleGenAI({
+      apiKey: key,
       httpOptions: {
         headers: {
           "User-Agent": "aistudio-build",
         }
       }
-    });
+    }));
   }
-  return geminiClient;
+
+  if (geminiClients.length === 0) return null;
+
+  // Pick a random client to distribute the load evenly
+  const randomIndex = Math.floor(Math.random() * geminiClients.length);
+  return geminiClients[randomIndex];
 }
 
 // ==========================================
