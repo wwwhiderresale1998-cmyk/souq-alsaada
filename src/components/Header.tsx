@@ -352,7 +352,7 @@ export default function Header({
               <button
                 id="admin-toggle-btn"
                 onClick={() => onToggleAdmin(!isAdminMode)}
-                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 border ${
+                className={`hidden sm:flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 border ${
                   isAdminMode
                     ? "bg-[#ff9800] text-[#131722] border-[#ff9800] shadow-[0_0_15px_rgba(255,152,0,0.3)] hover:bg-[#ffa726]"
                     : "bg-[#2a2e39] text-gray-300 border-transparent hover:border-[#ff9800]/50 hover:text-white"
@@ -636,6 +636,32 @@ export default function Header({
                   <MessageCircle className="w-5 h-5" />
                   <span>تواصل مع الدعم الفني</span>
                 </a>
+
+                {(showAdminButton || isAdminMode) && (
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onToggleAdmin(!isAdminMode);
+                    }}
+                    className={`w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all border ${
+                      isAdminMode
+                        ? "bg-[#ff9800]/10 text-[#ff9800] border-[#ff9800]/30"
+                        : "bg-[#2a2e39]/50 text-purple-400 border-purple-500/20"
+                    }`}
+                  >
+                    {isAdminMode ? (
+                      <>
+                        <LogOut className="w-5 h-5" />
+                        <span>الخروج من لوحة التحكم</span>
+                      </>
+                    ) : (
+                      <>
+                        <LayoutDashboard className="w-5 h-5" />
+                        <span>الدخول كتاجر (Admin)</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
             
