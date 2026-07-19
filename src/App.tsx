@@ -677,20 +677,36 @@ export default function App() {
                 </div>
                 
                 <div className="flex items-center gap-3 justify-end sm:justify-start">
-                  {currentUser && (
+                  {/* Floating Action Buttons */}
+                  <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3">
                     <button
-                      onClick={() => setShowFavoritesDrawer(true)}
-                      className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full border text-sm font-bold transition-all shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:-translate-y-1 bg-[#1e222d] border-[#2a2e39] text-rose-400 hover:border-rose-500/50 hover:text-white"
+                      onClick={() => setIsCartOpen(true)}
+                      className="relative flex items-center gap-2 px-5 py-3 rounded-full border text-sm font-bold transition-all shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:-translate-y-1 bg-[#1e222d] border-[#2a2e39] text-[#ff9800] hover:border-[#ff9800]/50 hover:text-white"
                     >
-                      <Heart className="w-5 h-5" />
-                      {favoriteIds.length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
-                          {favoriteIds.length}
+                      <ShoppingCart className="w-5 h-5" />
+                      {cart.length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border border-[#171b26] animate-pulse">
+                          {cart.reduce((sum, item) => sum + item.count, 0)}
                         </span>
                       )}
-                      <span>المفضلات</span>
+                      <span className="hidden sm:inline">سلة المشتريات</span>
                     </button>
-                  )}
+
+                    {currentUser && (
+                      <button
+                        onClick={() => setShowFavoritesDrawer(true)}
+                        className="relative flex items-center gap-2 px-5 py-3 rounded-full border text-sm font-bold transition-all shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:-translate-y-1 bg-[#1e222d] border-[#2a2e39] text-rose-400 hover:border-rose-500/50 hover:text-white"
+                      >
+                        <Heart className="w-5 h-5" />
+                        {favoriteIds.length > 0 && (
+                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border border-[#171b26]">
+                            {favoriteIds.length}
+                          </span>
+                        )}
+                        <span className="hidden sm:inline">المفضلات</span>
+                      </button>
+                    )}
+                  </div>
 
                   {searchQuery && (
                     <span className="text-xs bg-[#2a2e39] text-[#d1d4dc] px-3 py-1.5 rounded-xl border border-transparent text-right">

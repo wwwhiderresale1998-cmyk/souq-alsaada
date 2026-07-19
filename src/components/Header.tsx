@@ -334,7 +334,7 @@ export default function Header({
               <button
                 id="cart-toggle-btn"
                 onClick={onOpenCart}
-                className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all duration-300 border bg-[#2a2e39] text-gray-300 border-transparent hover:border-[#ff9800]/50 hover:text-white hover:scale-105 active:scale-95 cursor-pointer"
+                className="hidden sm:flex relative items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all duration-300 border bg-[#2a2e39] text-gray-300 border-transparent hover:border-[#ff9800]/50 hover:text-white hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <div className="relative">
                   <ShoppingCart className="w-4 h-4 text-current" />
@@ -608,6 +608,21 @@ export default function Header({
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
+                    if (onOpenCart) onOpenCart();
+                  }}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all bg-[#ff9800]/10 text-[#ff9800] border border-[#ff9800]/30 hover:bg-[#ff9800]/20"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>سلة المشتريات</span>
+                  {cartCount > 0 && (
+                    <span className="mr-auto bg-rose-500 text-white text-xs px-2 py-0.5 rounded-full font-black shadow-lg animate-pulse">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
                     onToggleFavorites();
                   }}
                   className="w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all bg-[#2a2e39]/50 text-gray-300 border border-transparent hover:border-[#ff9800]/50 hover:text-white"
@@ -663,6 +678,53 @@ export default function Header({
                   </button>
                 )}
               </div>
+
+              {/* Mobile Sidebar Categories */}
+              {!isAdminMode && (
+                <div className="mt-6 border-t border-[#2a2e39] pt-4 pb-20">
+                  <h4 className="text-xs font-bold text-gray-400 mb-3 flex items-center gap-2 px-2">
+                    <Grid className="w-4 h-4" />
+                    تسوق حسب الفئة
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        setActiveCategory(null);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-bold transition-all ${
+                        activeCategory === null
+                          ? "bg-[#ff9800]/10 border-[#ff9800]/30 text-[#ff9800]"
+                          : "bg-[#2a2e39]/30 border-transparent text-gray-300 hover:bg-[#2a2e39]"
+                      }`}
+                    >
+                      <img src={catAll} alt="الكل" className="w-6 h-6 rounded-md object-cover" />
+                      <span className="truncate">كل المعروضات</span>
+                    </button>
+                    {categories.map((cat) => {
+                      const isActive = activeCategory === cat.id;
+                      const catImg = getCategoryImage(cat);
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => {
+                            setActiveCategory(cat.id);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-bold transition-all ${
+                            isActive
+                              ? "bg-[#ff9800]/10 border-[#ff9800]/30 text-[#ff9800]"
+                              : "bg-[#2a2e39]/30 border-transparent text-gray-300 hover:bg-[#2a2e39]"
+                          }`}
+                        >
+                          <img src={catImg} alt={cat.name} className="w-6 h-6 rounded-md object-cover" />
+                          <span className="truncate">{cat.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Logout at bottom if logged in */}
