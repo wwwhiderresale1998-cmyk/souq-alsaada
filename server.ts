@@ -1031,7 +1031,7 @@ ${productContext}
     if (error.status === 503 || error.message?.includes('503')) {
         res.write(`data: ${JSON.stringify({ text: "عذراً عيني، أواجه ضغطاً كبيراً حالياً، يرجى المحاولة بعد قليل 😊" })}\n\n`);
     } else {
-        res.write(`data: ${JSON.stringify({ text: "نعتذر منك عيوني، خطأ: " + (error.message || "Unknown error") })}\n\n`);
+        res.write(`data: ${JSON.stringify({ text: "نعتذر منك عيوني، واجهت مشكلة صغيرة بالاتصال بالسيرفر. بس لا تشيل هم، التوصيل مالتنا مستمر خلال 24 ساعة لبغداد بـ 3 آلاف وباقي المحافظات بـ 5 آلاف دينار! تكدر تطلب أي منتج مباشرة بالضغط على 'اطلب الآن'." })}\n\n`);
     }
     res.write('data: [DONE]\n\n');
     res.end();
