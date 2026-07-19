@@ -18,7 +18,8 @@ import ChatAssistant from "./components/ChatAssistant";
 import AdminDashboard from "./components/AdminDashboard";
 import LatestProductsSlider from "./components/LatestProductsSlider";
 import CartDrawer from "./components/CartDrawer";
-import UserOrdersList from "./components/UserOrdersList";
+import FavoritesDrawer from "./components/FavoritesDrawer";
+import OrdersDrawer from "./components/OrdersDrawer";
 
 const ADMIN_EMAIL = 'www.hiderresale1998@gmail.com';
 
@@ -59,7 +60,8 @@ export default function App() {
 
   // Favorites state
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showFavoritesDrawer, setShowFavoritesDrawer] = useState(false);
+  const [showOrdersDrawer, setShowOrdersDrawer] = useState(false);
 
   useEffect(() => {
     if (!currentUser) {
@@ -133,7 +135,7 @@ export default function App() {
 
   useEffect(() => {
     setVisibleCount(24);
-  }, [activeCategory, searchQuery, showFavoritesOnly]);
+  }, [activeCategory, searchQuery]);
 
   useEffect(() => {
     if (currentUser) {
@@ -357,7 +359,7 @@ export default function App() {
   }, [activeImageIndex]);
 
   const [enhancingProductId, setEnhancingProductId] = useState<number | null>(null);
-  const [showUserOrders, setShowUserOrders] = useState(false);
+
 
   const handleEnhanceDescription = async (productId: number) => {
     setEnhancingProductId(productId);
@@ -499,9 +501,10 @@ export default function App() {
       prod.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (prod.raw_description && prod.raw_description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       prod.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFavorites = !showFavoritesOnly || favoriteIds.includes(prod.id);
-    return matchesCategory && matchesSearch && matchesFavorites;
+    return matchesCategory && matchesSearch;
   });
+
+  const favoritedProducts = products.filter(p => favoriteIds.includes(p.id));
 
   const handleOrderSuccess = (order: Order) => {
     setSelectedProductForOrder(null);
@@ -541,10 +544,10 @@ export default function App() {
         onLogin={handleLogin}
         isLoggingIn={isLoggingIn}
         onLogout={handleLogout}
-        onToggleFavorites={() => setShowFavoritesOnly(!showFavoritesOnly)}
-        showFavoritesOnly={showFavoritesOnly}
-        onToggleOrders={() => setShowUserOrders(!showUserOrders)}
-        showUserOrders={showUserOrders}
+        onToggleFavorites={() => setShowFavoritesDrawer(true)}
+        showFavoritesOnly={false}
+        onToggleOrders={() => setShowOrdersDrawer(true)}
+        showUserOrders={false}
       />
 
       {/* Auth/DB Error Toast */}
@@ -581,27 +584,6 @@ export default function App() {
             onLogout={handleLogout}
             onBackToStore={() => setIsAdminMode(false)}
           />
-        ) : showUserOrders ? (
-          /* ==========================================
-             C. USER ORDERS HISTORY VIEW
-             ========================================== */
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center justify-between border-b border-[#2a2e39] pb-6">
-              <button 
-                onClick={() => setShowUserOrders(false)}
-                className="flex items-center gap-2 text-xs font-bold text-[#ff9800] hover:bg-[#ff9800]/10 px-4 py-2 rounded-xl transition-all"
-              >
-                <ChevronLeft className="w-4 h-4 rotate-180" />
-                <span>العودة للتسوق</span>
-              </button>
-              <div className="text-right">
-                <h2 className="text-2xl font-black text-white">سجل طلباتي</h2>
-                <p className="text-xs text-[#787b86] mt-1">تتبع حالة مشترياتك السابقة من سوق السعادة</p>
-              </div>
-            </div>
-
-            <UserOrdersList currentUser={currentUser} products={products} />
-          </div>
         ) : (
           /* ==========================================
              B. CUSTOMER/VISITOR STOREFRONT VIEW
@@ -699,15 +681,16 @@ export default function App() {
                 <div className="flex items-center gap-3 justify-end sm:justify-start">
                   {currentUser && (
                     <button
-                      onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                      className={`fixed bottom-6 left-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full border text-sm font-bold transition-all shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:-translate-y-1 ${
-                        showFavoritesOnly 
-                          ? "bg-rose-500 border-rose-400 text-white hover:bg-rose-600" 
-                          : "bg-[#1e222d] border-[#2a2e39] text-rose-400 hover:border-gray-500 hover:text-white"
-                      }`}
+                      onClick={() => setShowFavoritesDrawer(true)}
+                      className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full border text-sm font-bold transition-all shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:-translate-y-1 bg-[#1e222d] border-[#2a2e39] text-rose-400 hover:border-rose-500/50 hover:text-white"
                     >
-                      <Heart className={`w-5 h-5 ${showFavoritesOnly ? "fill-current" : ""}`} />
-                      <span>{showFavoritesOnly ? "الرجوع لتصفح المنتجات" : "عرض المفضلات"}</span>
+                      <Heart className="w-5 h-5" />
+                      {favoriteIds.length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                          {favoriteIds.length}
+                        </span>
+                      )}
+                      <span>المفضلات</span>
                     </button>
                   )}
 
@@ -1080,6 +1063,27 @@ export default function App() {
           setIsCartCheckoutOpen(true);
         }}
         onZoomImage={setZoomedImage}
+      />
+
+      {/* 4.6. FAVORITES DRAWER */}
+      <FavoritesDrawer
+        isOpen={showFavoritesDrawer}
+        onClose={() => setShowFavoritesDrawer(false)}
+        favorites={favoritedProducts}
+        onSelectProduct={setSelectedProductDetails}
+        onOrderProduct={setSelectedProductForOrder}
+        onAddToCart={handleAddToCart}
+        onZoomImage={setZoomedImage}
+        onToggleFavorite={handleToggleFavorite}
+        favoriteIds={favoriteIds}
+      />
+
+      {/* 4.7. ORDERS HISTORY DRAWER */}
+      <OrdersDrawer
+        isOpen={showOrdersDrawer}
+        onClose={() => setShowOrdersDrawer(false)}
+        currentUser={currentUser}
+        products={products}
       />
 
 

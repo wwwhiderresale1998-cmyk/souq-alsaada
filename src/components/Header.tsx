@@ -335,13 +335,9 @@ export default function Header({
                             onToggleFavorites();
                             setIsProfileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                            showFavoritesOnly 
-                              ? "bg-rose-500/10 text-rose-400" 
-                              : "text-gray-300 hover:bg-[#2a2e39] hover:text-white"
-                          }`}
+                          className="w-full flex items-center justify-between p-3 rounded-xl transition-all text-gray-300 hover:bg-[#2a2e39] hover:text-rose-400"
                         >
-                          <Heart className={`w-4.5 h-4.5 ${showFavoritesOnly ? "fill-current" : ""}`} />
+                          <Heart className="w-4.5 h-4.5" />
                           <span className="text-xs font-bold">منتجاتي المفضلة</span>
                         </button>
 
@@ -351,11 +347,7 @@ export default function Header({
                             onToggleOrders();
                             setIsProfileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                            showUserOrders 
-                              ? "bg-[#ff9800]/10 text-[#ff9800]" 
-                              : "text-gray-300 hover:bg-[#2a2e39] hover:text-white"
-                          }`}
+                          className="w-full flex items-center justify-between p-3 rounded-xl transition-all text-gray-300 hover:bg-[#2a2e39] hover:text-[#ff9800]"
                         >
                           <Clock className="w-4.5 h-4.5" />
                           <span className="text-xs font-bold">سجل الطلبات</span>
@@ -687,13 +679,9 @@ export default function Header({
                     setIsMobileMenuOpen(false);
                     onToggleFavorites();
                   }}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all ${
-                    showFavoritesOnly 
-                      ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
-                      : "bg-[#2a2e39]/50 text-gray-300 border border-transparent hover:border-[#ff9800]/50 hover:text-white"
-                  }`}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all bg-[#2a2e39]/50 text-gray-300 border border-transparent hover:border-[#ff9800]/50 hover:text-white"
                 >
-                  <Heart className={`w-5 h-5 ${showFavoritesOnly ? "fill-current" : ""}`} />
+                  <Heart className="w-5 h-5" />
                   <span>المفضلات</span>
                 </button>
 
@@ -702,11 +690,7 @@ export default function Header({
                     setIsMobileMenuOpen(false);
                     onToggleOrders();
                   }}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all ${
-                    showUserOrders 
-                      ? "bg-[#ff9800]/10 text-[#ff9800] border border-[#ff9800]/20" 
-                      : "bg-[#2a2e39]/50 text-gray-300 border border-transparent hover:border-[#ff9800]/50 hover:text-white"
-                  }`}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all bg-[#2a2e39]/50 text-gray-300 border border-transparent hover:border-[#ff9800]/50 hover:text-white"
                 >
                   <Clock className="w-5 h-5" />
                   <span>سجل الطلبات السابقة</span>
