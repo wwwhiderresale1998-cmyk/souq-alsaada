@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search, LayoutDashboard, Sparkles, LogOut, CheckCircle2, ArrowLeft, Star, ShoppingBag, Smartphone, Home, Watch, Grid, ShoppingCart, LogIn, User as UserIcon, Heart, Clock, MessageCircle, ChevronDown, AlertCircle } from "lucide-react";
+import { Search, LayoutDashboard, Sparkles, LogOut, CheckCircle2, ArrowLeft, Star, ShoppingBag, Smartphone, Home, Watch, Grid, ShoppingCart, LogIn, User as UserIcon, Heart, Clock, MessageCircle, ChevronDown, AlertCircle, Menu, X } from "lucide-react";
 import { Category, Product } from "../types";
 import { User as FirebaseUser } from "firebase/auth";
 import { optimizeImageUrl } from "../lib/imageOptimizer";
@@ -126,6 +126,7 @@ export default function Header({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const mobileSearchContainerRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -279,8 +280,17 @@ export default function Header({
             </div>
           )}
 
-            {/* User Profile & Account Controls */}
-            <div className="flex items-center gap-2">
+            {/* Controls Container */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Mobile Hamburger Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="flex md:hidden items-center justify-center p-2 rounded-xl bg-[#2a2e39] text-white hover:bg-[#ff9800] transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+
+              {/* User Profile & Account Controls */}
               {currentUser ? (
                 <div className="relative" ref={profileMenuRef}>
                   <button 
@@ -412,7 +422,7 @@ export default function Header({
                 <button
                   onClick={onLogin}
                   disabled={isLoggingIn}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all duration-300 border bg-gradient-to-r from-[#ff9800] to-[#ffa726] text-[#131722] border-transparent hover:shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95 ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all duration-300 border bg-gradient-to-r from-[#ff9800] to-[#ffa726] text-[#131722] border-transparent hover:shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95 ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   {isLoggingIn ? (
                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -633,6 +643,105 @@ export default function Header({
           </div>
         )}
       </div>
+
+      {/* Mobile Sidebar Menu (Drawer) */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[100] md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* Drawer */}
+          <div className="absolute top-0 right-0 bottom-0 w-[80%] max-w-sm bg-[#1e222d] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-4 border-b border-[#2a2e39] flex items-center justify-between">
+              <span className="font-black text-[#ff9800] text-lg">سوق السعادة</span>
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 bg-[#2a2e39] text-gray-400 hover:text-white rounded-xl"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {!currentUser && (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onLogin();
+                  }}
+                  disabled={isLoggingIn}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ff9800] to-[#ffa726] text-[#131722] py-3.5 rounded-xl font-black text-sm"
+                >
+                  <LogIn className="w-5 h-5" />
+                  <span>{isLoggingIn ? "جاري تسجيل الدخول..." : "تسجيل الدخول / إنشاء حساب"}</span>
+                </button>
+              )}
+
+              {/* Menu Links */}
+              <div className="space-y-2 mt-4">
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onToggleFavorites();
+                  }}
+                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all ${
+                    showFavoritesOnly 
+                      ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
+                      : "bg-[#2a2e39]/50 text-gray-300 border border-transparent hover:border-[#ff9800]/50 hover:text-white"
+                  }`}
+                >
+                  <Heart className={`w-5 h-5 ${showFavoritesOnly ? "fill-current" : ""}`} />
+                  <span>المفضلات</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onToggleOrders();
+                  }}
+                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all ${
+                    showUserOrders 
+                      ? "bg-[#ff9800]/10 text-[#ff9800] border border-[#ff9800]/20" 
+                      : "bg-[#2a2e39]/50 text-gray-300 border border-transparent hover:border-[#ff9800]/50 hover:text-white"
+                  }`}
+                >
+                  <Clock className="w-5 h-5" />
+                  <span>سجل الطلبات السابقة</span>
+                </button>
+
+                <a
+                  href="https://wa.me/9647866400289"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm bg-[#2a2e39]/50 text-emerald-400 border border-emerald-500/20"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>تواصل مع الدعم الفني</span>
+                </a>
+              </div>
+            </div>
+            
+            {/* Logout at bottom if logged in */}
+            {currentUser && (
+              <div className="p-4 border-t border-[#2a2e39]">
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onLogout();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-black text-sm bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>تسجيل الخروج</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
