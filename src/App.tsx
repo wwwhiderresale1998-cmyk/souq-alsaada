@@ -281,6 +281,63 @@ export default function App() {
     localStorage.setItem("souq_saada_cart", JSON.stringify(cart));
   }, [cart]);
 
+  // ===================================================
+  // Browser Back Button Handler
+  // When any modal/drawer is open, push a history entry
+  // so pressing Back closes the overlay instead of leaving the site
+  // ===================================================
+  const anyOverlayOpen =
+    !!selectedProductDetails ||
+    !!zoomedImage ||
+    !!selectedProductForOrder ||
+    isCartOpen ||
+    isCartCheckoutOpen ||
+    showFavoritesDrawer ||
+    showOrdersDrawer ||
+    isAdminMode;
+
+  useEffect(() => {
+    if (anyOverlayOpen) {
+      // Push a "modal open" state into browser history
+      window.history.pushState({ modal: true }, "");
+    }
+  }, [anyOverlayOpen]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      // Close overlays in priority order (innermost first)
+      if (zoomedImage) {
+        setZoomedImage(null);
+      } else if (isCartCheckoutOpen) {
+        setIsCartCheckoutOpen(false);
+      } else if (selectedProductForOrder) {
+        setSelectedProductForOrder(null);
+      } else if (selectedProductDetails) {
+        setSelectedProductDetails(null);
+      } else if (isCartOpen) {
+        setIsCartOpen(false);
+      } else if (showFavoritesDrawer) {
+        setShowFavoritesDrawer(false);
+      } else if (showOrdersDrawer) {
+        setShowOrdersDrawer(false);
+      } else if (isAdminMode) {
+        setIsAdminMode(false);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [
+    zoomedImage,
+    isCartCheckoutOpen,
+    selectedProductForOrder,
+    selectedProductDetails,
+    isCartOpen,
+    showFavoritesDrawer,
+    showOrdersDrawer,
+    isAdminMode,
+  ]);
+
   const handleAddToCart = (product: Product) => {
     setCart((prev) => {
       const exists = prev.find((item) => item.product.id === product.id);

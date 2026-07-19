@@ -156,6 +156,34 @@ export default function Header({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ===================================================
+  // Browser Back Button Handler for Header
+  // When the sidebar or profile menu is open, push a history entry
+  // so pressing Back closes the menu instead of leaving the site
+  // ===================================================
+  const headerOverlayOpen = isMobileMenuOpen || isProfileMenuOpen;
+
+  useEffect(() => {
+    if (headerOverlayOpen) {
+      window.history.pushState({ modal: true }, "");
+    }
+  }, [headerOverlayOpen]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      // Close overlays in priority order
+      if (isProfileMenuOpen) {
+        setIsProfileMenuOpen(false);
+        setShowLogoutConfirm(false);
+      } else if (isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isProfileMenuOpen, isMobileMenuOpen]);
+
   const handleLogoClick = () => {
     setActiveCategory(null);
   };

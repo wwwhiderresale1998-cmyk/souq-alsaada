@@ -73,6 +73,26 @@ export default function ChatAssistant({ products = [], onSelectProduct, onOrderP
     }
   }, [messages, isLoading, isOpen]);
 
+  // ===================================================
+  // Browser Back Button Handler for ChatAssistant
+  // ===================================================
+  useEffect(() => {
+    if (isOpen) {
+      window.history.pushState({ modal: true }, "");
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isOpen]);
+
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim() || isLoading) return;
 
