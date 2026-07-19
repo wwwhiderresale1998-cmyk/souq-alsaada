@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Search, LayoutDashboard, Sparkles, LogOut, CheckCircle2, ArrowLeft, Star, ShoppingBag, Smartphone, Home, Watch, Grid, ShoppingCart, LogIn, User as UserIcon, Heart, Clock, MessageCircle, ChevronDown, AlertCircle, Menu, X } from "lucide-react";
 import { Category, Product } from "../types";
 import { User as FirebaseUser } from "firebase/auth";
@@ -536,9 +537,9 @@ export default function Header({
         )}
       </div>
 
-      {/* Mobile Sidebar Menu (Drawer) */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[100] overflow-hidden font-sans [direction:rtl]">
+      {/* Mobile Sidebar Menu (Drawer) - Rendered via Portal to avoid stacking context issues */}
+      {isMobileMenuOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] overflow-hidden font-sans [direction:rtl]">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300"
@@ -655,7 +656,8 @@ export default function Header({
             )}
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
       )}
     </header>
   );
