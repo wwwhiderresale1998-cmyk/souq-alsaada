@@ -538,15 +538,17 @@ export default function Header({
 
       {/* Mobile Sidebar Menu (Drawer) */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[100]">
+        <div className="fixed inset-0 z-[100] overflow-hidden font-sans [direction:rtl]">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setIsMobileMenuOpen(false)}
           />
           
-          {/* Drawer */}
-          <div className="absolute top-0 right-0 bottom-0 w-[85%] max-w-xs sm:max-w-sm bg-[#1e222d] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+          {/* Panel Wrapper */}
+          <div className="absolute inset-y-0 right-0 max-w-full flex">
+            {/* Drawer */}
+            <div className="w-screen max-w-xs sm:max-w-sm bg-[#1e222d] border-l border-[#2a2e39] text-white flex flex-col shadow-[-25px_0_60px_rgba(0,0,0,0.5)] animate-in slide-in-from-right duration-300">
             {/* Drawer Header */}
             <div className="p-4 border-b border-[#2a2e39] flex items-center justify-between bg-[#171b26]">
               {currentUser ? (
@@ -644,6 +646,7 @@ export default function Header({
             )}
           </div>
         </div>
+      </div>
       )}
     </header>
   );
