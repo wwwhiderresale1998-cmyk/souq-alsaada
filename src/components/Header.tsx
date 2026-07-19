@@ -161,11 +161,13 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#171b26] border-b border-[#2a2e39] text-white backdrop-blur-md bg-opacity-90">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          
-          {/* Logo & Slogan */}
+    <header className="relative z-40 bg-[#171b26] text-white">
+      {/* Sticky Top Bar */}
+      <div className="sticky top-0 z-50 bg-[#171b26]/90 backdrop-blur-md border-b border-[#2a2e39]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            
+            {/* Logo & Slogan */}
           <div className="flex items-center gap-4 cursor-pointer group" onClick={handleLogoClick}>
             <div className="relative w-12 h-12 rounded-2xl overflow-hidden border border-[#ff9800]/30 shadow-[0_0_20px_rgba(255,152,0,0.15)] flex items-center justify-center bg-[#131722] p-1 shrink-0 transition-all duration-300 group-hover:border-[#ff9800]/50 group-hover:shadow-[0_0_25px_rgba(255,152,0,0.3)]">
               <img 
@@ -372,10 +374,14 @@ export default function Header({
               </button>
             )}
           </div>
+        </div>
+      </div>
 
-        {/* Categories Bar & Mobile Search - hidden in admin mode */}
-        {!isAdminMode && (
-          <div className="border-t border-[#2a2e39] py-4.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Categories Bar & Mobile Search - hidden in admin mode */}
+      {!isAdminMode && (
+        <div className="border-b border-[#2a2e39] bg-[#171b26]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="py-4.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {/* Horizontal Categories with styled 3D Icons */}
             <div className="flex-1 overflow-hidden relative py-1">
               {/* Fade masks for indicating horizontal scroll in RTL */}
@@ -534,8 +540,9 @@ export default function Header({
               )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+        </div>
+      )}
 
       {/* Mobile Sidebar Menu (Drawer) - Rendered via Portal to avoid stacking context issues */}
       {isMobileMenuOpen && typeof document !== 'undefined' && createPortal(
