@@ -1321,6 +1321,69 @@ app.post("/api/admin/assign-role", async (req: Request, res: Response) => {
     }
 });
 
+// POST /api/gemini/chat - Gemini Chat Assistant
+app.post("/api/gemini/chat", async (req: Request, res: Response) => {
+  if (!process.env.GEMINI_API_KEY) {
+    res.status(500).json({ error: "Gemini API Key is not configured." });
+    return;
+  }
+
+  const { messages, userMessage } = req.body;
+  if (!userMessage) {
+    res.status(400).json({ error: "Missing user message." });
+    return;
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    
+    // Set headers for Server-Sent Events (SSE)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    // Create system instructions
+    const systemPrompt = `
+أنت مساعد ذكي مخصص لمتجر عراقي اسمه "سوق السعادة".
+وظيفتك الرد على استفسارات الزبائن باللهجة العراقية اللطيفة والمحترمة.
+أجب باختصار ومرح. لا تقدم أي منتجات غير موجودة في المتجر.
+التوصيل متاح لكل العراق:
+- بغداد: 3000 دينار (خلال 24 ساعة)
+- باقي المحافظات: 5000 دينار (خلال 2-3 أيام)
+
+قائمة المنتجات المتوفرة:
+${productsCache.map(p => `- ${p.title} (${p.price} دينار) [PRODUCT:${p.id}]`).join('\n')}
+
+إذا سأل الزبون عن منتج، اذكر اسمه وسعره، وضع الرمز [PRODUCT:رقم_المنتج] في النهاية ليتمكن النظام من عرض المنتج.
+مثال: "عيوني متوفرة عندنا ساعة كذا وسعرها 15000 دينار [PRODUCT:1234]"
+    `;
+
+    // Convert past messages to Gemini format if needed, but for simplicity we'll just send the current interaction
+    const chat = ai.chats.create({
+      model: 'gemini-2.5-flash',
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0.7,
+      }
+    });
+
+    const responseStream = await chat.sendMessageStream(userMessage);
+
+    for await (const chunk of responseStream) {
+      if (chunk.text) {
+        res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+      }
+    }
+    
+    res.write('data: [DONE]\n\n');
+    res.end();
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    res.write(`data: ${JSON.stringify({ error: "حدث خطأ في الاتصال بالذكاء الاصطناعي" })}\n\n`);
+    res.write('data: [DONE]\n\n');
+    res.end();
+  }
+});
 
 // ==========================================
 // 4. VITE DEV SERVER MIDDLEWARE & STATIC SERVING
