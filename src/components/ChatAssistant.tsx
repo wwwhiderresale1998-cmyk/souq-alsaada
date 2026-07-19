@@ -215,28 +215,29 @@ export default function ChatAssistant({ products = [], onSelectProduct, onOrderP
                       const product = products.find(p => p.id === productId);
                       if (product) {
                         return (
-                          <div key={i} className="mt-2 mb-2 p-2 bg-[#171b26] rounded-xl border border-[#3a3f50] flex items-center gap-3 text-right group">
+                          <div key={i} className="mt-3 mb-3 p-3 bg-gradient-to-br from-[#1e2333] to-[#131722] rounded-xl border border-[#3a3f50] shadow-lg hover:shadow-[0_0_15px_rgba(255,152,0,0.15)] transition-all duration-300 flex items-center gap-3 text-right group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-[#ff9800] opacity-[0.03] rounded-bl-full pointer-events-none"></div>
                             <div className="relative">
-                              <img src={product.image} alt={product.title} className="w-12 h-12 rounded-lg object-cover" />
+                              <img src={product.image} alt={product.title} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border border-[#2a2e39] group-hover:border-[#ff9800]/30 transition-colors" />
                               {onZoomImage && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); onZoomImage(product.image); }}
-                                  className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg cursor-pointer"
+                                  className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl cursor-pointer scale-95 group-hover:scale-100"
                                   title="تكبير الصورة"
                                 >
-                                  <ZoomIn className="w-4 h-4 text-white" />
+                                  <ZoomIn className="w-5 h-5 text-white" />
                                 </button>
                               )}
                             </div>
-                            <div className="flex-1">
-                              <h5 className="text-[10px] sm:text-xs font-bold text-white line-clamp-1">{product.title}</h5>
-                              <p className="text-[10px] text-[#ff9800] font-black">{product.price.toLocaleString("ar-IQ")} دينار</p>
-                              <div className="flex gap-1 mt-1">
+                            <div className="flex-1 z-10">
+                              <h5 className="text-[11px] sm:text-xs font-bold text-gray-100 line-clamp-2 leading-tight">{product.title}</h5>
+                              <p className="text-[11px] text-[#ff9800] font-black mt-1 bg-[#ff9800]/10 inline-block px-1.5 py-0.5 rounded">{product.price.toLocaleString("ar-IQ")} دينار</p>
+                              <div className="flex gap-2 mt-2">
                                 {onSelectProduct && (
-                                  <button onClick={() => onSelectProduct(product)} className="flex-1 py-1.5 bg-[#2a2e39] hover:bg-[#3a3f50] text-[10px] rounded text-white transition">التفاصيل</button>
+                                  <button onClick={() => onSelectProduct(product)} className="flex-1 py-1.5 bg-[#2a2e39] hover:bg-[#3a3f50] text-[10px] rounded-lg text-white font-semibold transition-all hover:scale-105 active:scale-95 shadow-sm">التفاصيل</button>
                                 )}
                                 {onOrderProduct && (
-                                  <button onClick={() => onOrderProduct(product)} className="flex-1 py-1.5 bg-[#ff9800] hover:bg-[#ffa726] text-[10px] text-[#131722] font-black rounded transition">اطلب الآن</button>
+                                  <button onClick={() => onOrderProduct(product)} className="flex-1 py-1.5 bg-gradient-to-r from-[#ff9800] to-[#ff7b00] hover:from-[#ffa726] hover:to-[#ff9800] text-[10px] text-[#131722] font-black rounded-lg transition-all hover:shadow-[0_0_10px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95">اطلب الآن</button>
                                 )}
                               </div>
                             </div>
