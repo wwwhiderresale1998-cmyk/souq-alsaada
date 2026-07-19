@@ -122,7 +122,7 @@ export default function ProductCard({
               e.stopPropagation();
               onZoomImage(optimizedSrc);
             }}
-            className="absolute bottom-3 left-3 bg-[#131722]/80 hover:bg-[#ff9800] text-white hover:text-[#131722] p-2 rounded-xl transition-all opacity-0 group-hover:opacity-100 z-20 cursor-pointer shadow-md"
+            className="absolute bottom-3 left-12 w-8 h-8 rounded-full flex items-center justify-center bg-black/40 border border-white/20 text-white hover:bg-[#ff9800] hover:border-[#ff9800] hover:text-[#131722] transition-all sm:opacity-0 sm:group-hover:opacity-100 z-20 cursor-pointer shadow-md"
             title="تكبير الصورة"
           >
             <ZoomIn className="w-4 h-4" />
