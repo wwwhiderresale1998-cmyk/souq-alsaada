@@ -167,14 +167,14 @@ export default function CartDrawer({
                 </div>
                 <div className="flex justify-between items-center flex-row-reverse">
                   <span>خدمة التوصيل:</span>
-                  <span className="text-white font-bold">
-                    <bdi>يُحسب عند اختيار المحافظة</bdi>
+                  <span className="text-emerald-400 font-bold">
+                    <bdi>5,000 د.ع</bdi>
                   </span>
                 </div>
                 <div className="border-t border-[#2a2e39] pt-3.5 flex justify-between items-center flex-row-reverse">
                   <span className="text-sm font-black text-white">المجموع الإجمالي:</span>
                   <span className="text-[#ff9800] text-base font-black">
-                    <bdi>{subtotal.toLocaleString("ar-IQ")} د.ع</bdi>
+                    <bdi>{(subtotal + 5000).toLocaleString("ar-IQ")} د.ع</bdi>
                   </span>
                 </div>
               </div>

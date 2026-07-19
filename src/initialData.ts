@@ -12,7 +12,7 @@ import catBeauty from "./assets/images/cat_beauty_1784284065096.jpg";
 import catAccessories from "./assets/images/cat_accessories_1784284080232.jpg";
 
 export const IRAQI_PROVINCES = [
-  { name: "بغداد", shippingFee: 3000 },
+  { name: "بغداد", shippingFee: 5000 },
   { name: "البصرة", shippingFee: 5000 },
   { name: "نينوى (الموصل)", shippingFee: 5000 },
   { name: "أربيل", shippingFee: 5000 },

@@ -145,7 +145,7 @@ export default function ChatAssistant({ products = [], onSelectProduct, onOrderP
       const errorMsg: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         sender: "assistant",
-        text: "نعتذر منك عيوني، واجهت مشكلة صغيرة بالاتصال بالسيرفر. بس لا تشيل هم، التوصيل مالتنا مستمر خلال 24 ساعة لبغداد بـ 3 آلاف وباقي المحافظات بـ 5 آلاف دينار! تكدر تطلب أي منتج مباشرة بالضغط على 'اطلب الآن'.",
+        text: "نعتذر منك عيوني، واجهت مشكلة صغيرة بالاتصال بالسيرفر. بس لا تشيل هم، التوصيل مالتنا مستمر خلال 24 ساعة لجميع المحافظات بـ 5 آلاف دينار! تكدر تطلب أي منتج مباشرة بالضغط على 'اطلب الآن'.",
         timestamp: new Date().toLocaleTimeString("ar-IQ", { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, errorMsg]);

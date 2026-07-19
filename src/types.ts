@@ -31,7 +31,7 @@ export interface Order {
   item_id: number;
   item_title: string;
   all_price: number; // product price per item
-  delivery_price: number; // shipping cost (3,000 for Baghdad, 5,000 elsewhere)
+  delivery_price: number; // shipping cost (5,000 IQD for all provinces)
   total_price: number; // (all_price * count) + delivery_price
   count: number;
   note: string;

@@ -367,7 +367,7 @@ function generateHistoricalOrders() {
   ];
 
   const provinces = [
-    { name: "بغداد", fee: 3000 },
+    { name: "بغداد", fee: 5000 },
     { name: "البصرة", fee: 5000 },
     { name: "نينوى (الموصل)", fee: 5000 },
     { name: "أربيل", fee: 5000 },
@@ -755,17 +755,11 @@ app.post("/api/add-simple-order", async (req: Request, res: Response) => {
       }, { merge: true });
     }
 
-    // Calculate the shipping difference and adjust the price sent to the supplier API.
-    // Our website charges 3,000 IQD for Baghdad, and 5,000 IQD for other provinces.
-    // Since the supplier's external server automatically adds 5,000 IQD for shipping to every order,
-    // if the order is for Baghdad, we subtract 2,000 IQD / count from the single product price we submit.
-    // This mathematically ensures that: (adjustedAllPrice * count) + 5000 (supplier shipping) === (all_price * count) + 3000 (our shipping)
-    const provinceClean = capetel.trim();
-    const isBaghdad = provinceClean.includes("بغداد");
-    const websiteDeliveryPrice = 5000;
-    
     // سيرفر شركة موجود (Mojod) يتوقع أن يكون all_price هو المبلغ الإجمالي الذي سيقوم المندوب بجمعه من الزبون.
     // لذلك يجب أن نرسل سعر المنتجات + سعر التوصيل الكلي كـ all_price لتجنب خطأ "الربح بالسالب".
+    // سعر التوصيل ثابت 5,000 د.ع لجميع المحافظات.
+    const provinceClean = capetel.trim();
+    const websiteDeliveryPrice = 5000;
     const adjustedAllPriceForSupplier = (all_price * count) + websiteDeliveryPrice;
     const local_order_id = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
 
