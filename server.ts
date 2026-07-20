@@ -180,6 +180,53 @@ async function notifyAdminTelegramCart(payload: any, items: any[]) {
   }
 }
 
+// دالة إرسال إشعار فوري عند طلب منتج مفرد من الموقع مباشرة
+async function notifyAdminTelegramNewOrder(payload: any) {
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+  const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+  
+  if (!BOT_TOKEN || !CHAT_ID) {
+    console.log("[Telegram] تم إيقاف الإشعارات مؤقتاً لعدم وجود Token أو Chat ID في ملف .env");
+    return;
+  }
+
+  const message = `
+🌟 *طلب جديد تم تسجيله في متجرك!* 🌟
+━━━━━━━━━━━━━━
+👤 *الاسم:* \`${payload.cus_name}\`
+📱 *الهاتف:* \`${payload.cus_num1}\`
+📍 *المحافظة:* \`${payload.capetel}\`
+🏘️ *المنطقة:* \`${payload.city || 'غير محدد'}\`
+🏠 *العنوان:* \`${payload.address}\`
+📦 *معرف المنتج:* \`${payload.item_id}\`
+💰 *السعر الكلي:* \`${payload.all_price}\` د.ع
+🔢 *الكمية:* \`${payload.count}\`
+📝 *ملاحظات:* \`${payload.note || 'لا يوجد'}\`
+━━━━━━━━━━━━━━
+⏳ *جاري إرساله للمورد تلقائياً...*
+  `.trim();
+  
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    });
+    
+    if (response.ok) {
+      console.log("[Telegram] تم إرسال إشعار الطلب الجديد بنجاح.");
+    } else {
+      console.error("[Telegram] فشل إرسال إشعار الطلب الجديد:", await response.text());
+    }
+  } catch (err) {
+    console.error("[Telegram] خطأ في الاتصال بالتيليجرام:", err);
+  }
+}
+
 async function processOrderQueue() {
   if (externalOrderQueue.length === 0) return;
   if (Date.now() < rateLimitUntil) return; // Waiting for cooldown
@@ -815,6 +862,19 @@ app.post("/api/add-simple-order", async (req: Request, res: Response) => {
     orders.unshift(newOrder);
     saveOrder(newOrder);
     saveOrdersToFile(); // Disk persist
+    
+    // إرسال إشعار فوري للتيليجرام
+    await notifyAdminTelegramNewOrder({
+      cus_name,
+      cus_num1,
+      capetel: provinceClean,
+      city: city || "",
+      address,
+      item_id,
+      all_price,
+      count,
+      note
+    });
 
     res.json({
       success: true,
