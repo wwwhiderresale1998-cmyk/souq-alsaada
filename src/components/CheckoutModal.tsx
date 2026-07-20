@@ -68,16 +68,6 @@ export default function CheckoutModal({ product, cartItems, onClose, onOrderSucc
 
     setIsLoading(true);
 
-    const savedPhone = localStorage.getItem("saved_cus_num");
-    const lastOrderDate = localStorage.getItem("saved_order_date");
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    if (savedPhone && savedPhone === cleanedPhone && lastOrderDate === todayStr && !isConfirmed.current) {
-      setShowConfirmModal(true);
-      setIsLoading(false);
-      return;
-    }
-
     processCheckout(cleanedPhone);
   };
 
@@ -483,23 +473,7 @@ export default function CheckoutModal({ product, cartItems, onClose, onOrderSucc
         </div>
       </div>
 
-      <ConfirmModal
-        isOpen={showConfirmModal}
-        title="تنبيه: طلب متكرر"
-        message="لقد قمت بتسجيل طلب سابق بنفس هذا الرقم اليوم. هل أنت متأكد أنك تريد إضافة هذا الطلب كقطعة إضافية منفصلة؟"
-        confirmText="نعم، أضف الطلب"
-        cancelText="تراجع"
-        onConfirm={() => {
-          setShowConfirmModal(false);
-          isConfirmed.current = true;
-          const cleanedPhone = cusNum.trim();
-          processCheckout(cleanedPhone);
-        }}
-        onCancel={() => {
-          setShowConfirmModal(false);
-          isConfirmed.current = false;
-        }}
-      />
+      {/* تمت إزالة ConfirmModal لعدم إظهار التنبيه للزبون أبداً */}
     </div>
   );
 }

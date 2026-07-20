@@ -76,8 +76,11 @@ async function enqueueExternalOrder(payload: any) {
 // دالة إرسال إشعار تيليجرام مجاني لكل الطلبات
 async function notifyAdminTelegram(payload: any, status: 'SUCCESS' | 'FAILED', extraInfo: string = '') {
   // 🔴 ضع الـ Token والـ Chat ID الخاصين بك هنا
-  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-  const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+  let BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+  let CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+  
+  BOT_TOKEN = BOT_TOKEN.trim().replace(/^bot/i, '');
+  CHAT_ID = CHAT_ID.trim();
   
   if (!BOT_TOKEN || !CHAT_ID) {
     console.log("[Telegram] تم إيقاف الإشعارات مؤقتاً لعدم وجود Token أو Chat ID في ملف .env");
@@ -85,7 +88,11 @@ async function notifyAdminTelegram(payload: any, status: 'SUCCESS' | 'FAILED', e
   }
 
   const icon = status === 'SUCCESS' ? '✅' : '❌';
-  const statusText = status === 'SUCCESS' ? 'تم تسجيل وإرسال الطلب للمورد بنجاح' : 'فشل إرسال الطلب للمورد';
+  let statusText = status === 'SUCCESS' ? 'تم تسجيل وإرسال الطلب للمورد بنجاح' : 'فشل إرسال الطلب للمورد';
+  
+  if (status === 'FAILED') {
+    statusText = '❌ الطلب مرفوض من المورد (مخالف للشروط أو مكرر)\nيرجى إدخال هذا الطلب يدوياً في تطبيق موجود!';
+  }
   
   const message = `
 🛒 *طلب جديد في سوق السعادة* ${icon}
@@ -101,7 +108,7 @@ async function notifyAdminTelegram(payload: any, status: 'SUCCESS' | 'FAILED', e
 📝 *ملاحظات:* \`${payload.note || 'لا يوجد'}\`
 ━━━━━━━━━━━━━━
 📊 *الحالة:* ${statusText}
-${extraInfo ? `\n⚠️ *تفاصيل إضافية:*\n\`\`\`json\n${extraInfo}\n\`\`\`` : ''}
+${extraInfo ? `\n⚠️ *سبب الرفض:*\n\`\`\`text\n${extraInfo}\n\`\`\`` : ''}
   `.trim();
   
   try {
@@ -264,35 +271,46 @@ async function processOrderQueue() {
       // Ensure at least a small delay between successful requests
       rateLimitUntil = Date.now() + 5000; 
     } else {
-      console.warn("[Queue] API Response Error:", json);
-      // Check if it's a rate limit error (429 or text)
+      console.warn("[Queue] API Response Error:", json, "HTTP Status:", apiRes.status);
+      
+      // Rate limit error (429 or explicit rate limit message)
       if (json.error?.includes("Rate limit exceeded") || apiRes.status === 429 || json.message?.includes("Rate limit")) {
         console.warn("[Queue] Rate limit hit! Pausing for 5 minutes...");
-        rateLimitUntil = Date.now() + (5 * 60 * 1000); // Wait 5 minutes
-      } else {
-        // Other API error (e.g. 400 bad request). Discard to prevent infinite loop
-        console.error("[Queue] Permanent error, discarding order:", json);
+        rateLimitUntil = Date.now() + (5 * 60 * 1000);
         
-        // إرسال إشعار بالفشل
-        await notifyAdminTelegram(payload, 'FAILED', JSON.stringify(json));
+      } else if (apiRes.status >= 500) {
+        // Server-side error from Rolemall (5xx) - could be temporary, retry after 30s
+        console.warn("[Queue] Rolemall server error (5xx), will retry in 30 seconds...");
+        rateLimitUntil = Date.now() + 30000;
+        
+      } else {
+        // Permanent client-side error (4xx) - discard to prevent infinite loop
+        console.error("[Queue] Permanent error (4xx), discarding order:", json);
+        
+        // Extract the real error reason
+        let errorReason = "";
+        if (json.detail) {
+          if (typeof json.detail === "string") errorReason = json.detail;
+          else errorReason = JSON.stringify(json.detail);
+        } else if (json.message) {
+          errorReason = json.message;
+        } else if (json.error) {
+          errorReason = json.error;
+        } else {
+          errorReason = "مرفوض من المورد";
+        }
+
+        // إرسال إشعار بالفشل مع سبب الرفض
+        await notifyAdminTelegram(payload, 'FAILED', errorReason);
         
         // تحديث حالة الطلب محلياً مع توضيح السبب
         if (payload.local_order_id) {
            const oIdx = orders.findIndex(o => o.id === payload.local_order_id);
            if (oIdx !== -1) {
-               orders[oIdx].status = 'failed';
-               
-               let errorReason = "";
-               if (json.detail) {
-                 if (typeof json.detail === "string") errorReason = json.detail;
-                 else errorReason = JSON.stringify(json.detail);
-               } else if (json.message) {
-                 errorReason = json.message;
-               } else {
-                 errorReason = "مرفوض من المورد";
-               }
-               
-               orders[oIdx].note += ` [خطأ المورد: ${errorReason}]`;
+               // نتركه كـ 'pending' أو يمكن إنشاء حالة 'manual' لكي لا يظهر خطأ للمستخدم
+               // لن نقوم بإضافة رسالة خطأ للملاحظات حتى لا يراها الزبون
+               orders[oIdx].status = 'pending';
+               orders[oIdx].note += ` (سيتم المعالجة يدوياً)`;
                saveOrdersToFile();
            }
         }
@@ -517,18 +535,29 @@ async function populateCaches() {
   console.log("[سوق السعادة] جاري جلب البيانات بالكامل من متجر Rolemall للتخزين المؤقت...");
 
   try {
+    // Helper: fetch with a 20-second timeout to prevent hanging forever
+    const fetchWithTimeout = (url: string, timeoutMs = 20000) => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+    };
+
     // 1. Categories
-    const catRes = await fetch(`${EXTERNAL_BASE_URL}/api/categories`);
-    if (catRes.ok) {
-      const json = await catRes.json();
-      if (json && json.status && json.data && json.data.categories) {
-        categoriesCache = json.data.categories.map((c: any) => ({
-          id: c._id,
-          name: c.name,
-          icon: getIconForCategoryName(c.name)
-        }));
-        console.log(`[سوق السعادة] تم تحميل ${categoriesCache.length} فئات بنجاح.`);
+    try {
+      const catRes = await fetchWithTimeout(`${EXTERNAL_BASE_URL}/api/categories`);
+      if (catRes.ok) {
+        const json = await catRes.json();
+        if (json && json.status && json.data && json.data.categories) {
+          categoriesCache = json.data.categories.map((c: any) => ({
+            id: c._id,
+            name: c.name,
+            icon: getIconForCategoryName(c.name)
+          }));
+          console.log(`[سوق السعادة] تم تحميل ${categoriesCache.length} فئات بنجاح.`);
+        }
       }
+    } catch (err: any) {
+      console.error("[سوق السعادة] Error loading categories (timeout?):", err?.message || err);
     }
 
     // 2. Products - Dynamically fetch ALL pages of products from the supplier store
@@ -538,7 +567,7 @@ async function populateCaches() {
 
     try {
       // Fetch page 1 with limit=100 to get total count & total pages metadata
-      const firstRes = await fetch(`${EXTERNAL_BASE_URL}/api/products?token=${EXTERNAL_TOKEN}&page=1&limit=100`);
+      const firstRes = await fetchWithTimeout(`${EXTERNAL_BASE_URL}/api/products?token=${EXTERNAL_TOKEN}&page=1&limit=100`);
       if (firstRes.ok) {
         const json = await firstRes.json();
         if (json && json.status && json.data) {
@@ -548,25 +577,25 @@ async function populateCaches() {
           if (json.data.pages) {
             totalPages = json.data.pages;
           }
-          console.log(`[سوق السعادة] تم جلب الصفحة 1 بنجاح. إجمالي الصفحات المتوفرة: ${totalPages}. إجمالي المنتجات: ${json.data.total}`);
+          console.log(`[سوق السعادة] تم جلب الصفحة 1 بنجاح. إجمالي الصفحات: ${totalPages}. إجمالي المنتجات: ${json.data.total}`);
         }
       }
-    } catch (err) {
-      console.error("Error loading page 1 products:", err);
+    } catch (err: any) {
+      console.error("[سوق السعادة] Error loading page 1 products (timeout?):", err?.message || err);
     }
 
     // Loop through the rest of the pages dynamically
     for (let page = 2; page <= totalPages; page++) {
       try {
-        const prodRes = await fetch(`${EXTERNAL_BASE_URL}/api/products?token=${EXTERNAL_TOKEN}&page=${page}&limit=100`);
+        const prodRes = await fetchWithTimeout(`${EXTERNAL_BASE_URL}/api/products?token=${EXTERNAL_TOKEN}&page=${page}&limit=100`);
         if (prodRes.ok) {
           const json = await prodRes.json();
           if (json && json.status && json.data && json.data.products) {
             allProducts = allProducts.concat(json.data.products);
           }
         }
-      } catch (err) {
-        console.error(`Error loading page ${page} products:`, err);
+      } catch (err: any) {
+        console.error(`[سوق السعادة] Error loading page ${page} (timeout?):`, err?.message || err);
       }
     }
 
@@ -810,15 +839,10 @@ app.post("/api/add-simple-order", async (req: Request, res: Response) => {
     const adjustedAllPriceForSupplier = (all_price * count) + websiteDeliveryPrice;
     const local_order_id = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // Bypass Supplier Duplicate Phone Limitation
-    // If the customer ordered today with the same phone, append a random variation
-    let final_cus_num1 = cus_num1;
-    const todayStr = new Date().toISOString().split('T')[0];
-    const duplicateOrder = orders.find(o => o.cus_num1.trim().startsWith(cus_num1.trim()) && o.created_at.startsWith(todayStr));
-    if (duplicateOrder) {
-      final_cus_num1 = cus_num1.trim() + " - " + Math.floor(Math.random() * 99);
-      console.log(`[Order] Modified duplicate phone number to bypass supplier rule: ${final_cus_num1}`);
-    }
+    // إرسال رقم الهاتف الأصلي للزبون بدون أي تعديل لضمان قدرة المندوب على التواصل معه
+    // في حال كان الطلب مكرر، سيتم رفضه من المورد وسيصلك إشعار على تيليجرام لإدخاله يدوياً
+    const final_cus_num1 = cus_num1; 
+    console.log(`[Order] Original phone sent to supplier: ${final_cus_num1}`);
 
     // 1. Submit drop-ship request to Rolemall via Queue
     enqueueExternalOrder({
@@ -1422,15 +1446,7 @@ app.post("/api/admin/assign-role", async (req: Request, res: Response) => {
 // ==========================================
 
 async function startServer() {
-  // Pre-populate data cache from Rolemall on boot
-  await populateCaches();
-
-  // Auto-refresh products cache from the supplier every 15 minutes to stay updated automatically
-  setInterval(() => {
-    console.log("[سوق السعادة] تحديث تلقائي لمخزن المنتجات من المورد...");
-    populateCaches().catch(err => console.error("Auto-populate failed:", err));
-  }, 15 * 60 * 1000);
-
+  // Setup Vite or static serving FIRST so the server can start immediately
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       configFile: './vite.config.ts',
@@ -1446,9 +1462,19 @@ async function startServer() {
     });
   }
 
+  // Start listening IMMEDIATELY - don't wait for cache population
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[سوق السعادة] Fullstack backend integrated successfully on port ${PORT}!`);
+    console.log(`[سوق السعادة] السيرفر يعمل على المنفذ ${PORT}. جاري جلب المنتجات في الخلفية...`);
   });
+
+  // Populate caches in background AFTER server is already listening
+  populateCaches().catch(err => console.error("[سوق السعادة] خطأ في التحميل المسبق:", err));
+
+  // Auto-refresh products cache from the supplier every 15 minutes
+  setInterval(() => {
+    console.log("[سوق السعادة] تحديث تلقائي لمخزن المنتجات من المورد...");
+    populateCaches().catch(err => console.error("Auto-populate failed:", err));
+  }, 15 * 60 * 1000);
 }
 
 startServer().catch((err) => {
