@@ -73,6 +73,48 @@ async function enqueueExternalOrder(payload: any) {
   console.log(`[Queue] Order added. Queue length: ${externalOrderQueue.length}`);
 }
 
+// دالة مساعدة لإرسال رسالة تيليجرام مع صورة أو بدونها
+async function sendTelegramNotification(BOT_TOKEN: string, CHAT_ID: string, message: string, imageUrl?: string) {
+  // إذا كان هناك رابط صورة صالح، نرسل كصورة مع النص كتعليق
+  if (imageUrl && imageUrl.startsWith('http')) {
+    try {
+      const photoRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          photo: imageUrl,
+          caption: message,
+          parse_mode: 'Markdown'
+        })
+      });
+      if (photoRes.ok) {
+        console.log("[Telegram] تم إرسال الإشعار مع الصورة بنجاح.");
+        return;
+      }
+      // إذا فشل إرسال الصورة، نرسل نصاً عادياً
+      console.warn("[Telegram] فشل إرسال الصورة، سيتم إرسال نص فقط:", await photoRes.text());
+    } catch (err) {
+      console.warn("[Telegram] خطأ في إرسال الصورة، سيتم إرسال نص فقط:", err);
+    }
+  }
+  // إرسال نص عادي (fallback أو عند عدم وجود صورة)
+  const textRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: CHAT_ID,
+      text: message,
+      parse_mode: 'Markdown'
+    })
+  });
+  if (textRes.ok) {
+    console.log("[Telegram] تم إرسال الإشعار النصي بنجاح.");
+  } else {
+    console.error("[Telegram] فشل إرسال الإشعار:", await textRes.text());
+  }
+}
+
 // دالة إرسال إشعار تيليجرام مجاني لكل الطلبات
 async function notifyAdminTelegram(payload: any, status: 'SUCCESS' | 'FAILED', extraInfo: string = '') {
   // 🔴 ضع الـ Token والـ Chat ID الخاصين بك هنا
@@ -87,8 +129,13 @@ async function notifyAdminTelegram(payload: any, status: 'SUCCESS' | 'FAILED', e
     return;
   }
 
+  // البحث عن صورة المنتج من الكاش
+  const matchedProduct = productsCache.find(p => p.id === payload.item_id);
+  const productTitle = matchedProduct ? matchedProduct.title : 'غير معروف';
+  const productImage = matchedProduct ? matchedProduct.image : '';
+
   const icon = status === 'SUCCESS' ? '✅' : '❌';
-  let statusText = status === 'SUCCESS' ? 'تم تسجيل وإرسال الطلب للمورد بنجاح' : 'فشل إرسال الطلب للمورد';
+  let statusText = status === 'SUCCESS' ? '✅ تم تسجيل وإرسال الطلب للمورد بنجاح' : 'فشل إرسال الطلب للمورد';
   
   if (status === 'FAILED') {
     statusText = '❌ الطلب مرفوض من المورد (مخالف للشروط أو مكرر)\nيرجى إدخال هذا الطلب يدوياً في تطبيق موجود!';
@@ -102,31 +149,18 @@ async function notifyAdminTelegram(payload: any, status: 'SUCCESS' | 'FAILED', e
 📍 *المحافظة:* \`${payload.capetel}\`
 🏘️ *المنطقة:* \`${payload.city || 'غير محدد'}\`
 🏠 *العنوان:* \`${payload.address}\`
-📦 *معرف المنتج:* \`${payload.item_id}\`
+🏷️ *المنتج:* \`${productTitle}\`
+📦 *كود المنتج:* \`${payload.item_id}\`
 💰 *السعر الكلي:* \`${payload.all_price}\` د.ع
 🔢 *الكمية:* \`${payload.count}\`
 📝 *ملاحظات:* \`${payload.note || 'لا يوجد'}\`
 ━━━━━━━━━━━━━━
 📊 *الحالة:* ${statusText}
-${extraInfo ? `\n⚠️ *سبب الرفض:*\n\`\`\`text\n${extraInfo}\n\`\`\`` : ''}
+${extraInfo ? `\n⚠️ *سبب الرفض:*\n\`\`\`\n${extraInfo}\n\`\`\`` : ''}
   `.trim();
   
   try {
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: message,
-        parse_mode: 'Markdown'
-      })
-    });
-    
-    if (response.ok) {
-      console.log("[Telegram] تم إرسال الإشعار بنجاح.");
-    } else {
-      console.error("[Telegram] فشل إرسال الإشعار:", await response.text());
-    }
+    await sendTelegramNotification(BOT_TOKEN, CHAT_ID, message, productImage);
   } catch (err) {
     console.error("[Telegram] خطأ في الاتصال بالتيليجرام:", err);
   }
@@ -189,13 +223,21 @@ async function notifyAdminTelegramCart(payload: any, items: any[]) {
 
 // دالة إرسال إشعار فوري عند طلب منتج مفرد من الموقع مباشرة
 async function notifyAdminTelegramNewOrder(payload: any) {
-  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-  const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+  let BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+  let CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+
+  BOT_TOKEN = BOT_TOKEN.trim().replace(/^bot/i, '');
+  CHAT_ID = CHAT_ID.trim();
   
   if (!BOT_TOKEN || !CHAT_ID) {
     console.log("[Telegram] تم إيقاف الإشعارات مؤقتاً لعدم وجود Token أو Chat ID في ملف .env");
     return;
   }
+
+  // البحث عن صورة وعنوان المنتج من الكاش
+  const matchedProduct = productsCache.find(p => p.id === payload.item_id);
+  const productTitle = matchedProduct ? matchedProduct.title : 'غير معروف';
+  const productImage = matchedProduct ? matchedProduct.image : '';
 
   const message = `
 🌟 *طلب جديد تم تسجيله في متجرك!* 🌟
@@ -205,7 +247,8 @@ async function notifyAdminTelegramNewOrder(payload: any) {
 📍 *المحافظة:* \`${payload.capetel}\`
 🏘️ *المنطقة:* \`${payload.city || 'غير محدد'}\`
 🏠 *العنوان:* \`${payload.address}\`
-📦 *معرف المنتج:* \`${payload.item_id}\`
+🏷️ *المنتج:* \`${productTitle}\`
+📦 *كود المنتج:* \`${payload.item_id}\`
 💰 *السعر الكلي:* \`${payload.all_price}\` د.ع
 🔢 *الكمية:* \`${payload.count}\`
 📝 *ملاحظات:* \`${payload.note || 'لا يوجد'}\`
@@ -214,21 +257,7 @@ async function notifyAdminTelegramNewOrder(payload: any) {
   `.trim();
   
   try {
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: message,
-        parse_mode: 'Markdown'
-      })
-    });
-    
-    if (response.ok) {
-      console.log("[Telegram] تم إرسال إشعار الطلب الجديد بنجاح.");
-    } else {
-      console.error("[Telegram] فشل إرسال إشعار الطلب الجديد:", await response.text());
-    }
+    await sendTelegramNotification(BOT_TOKEN, CHAT_ID, message, productImage);
   } catch (err) {
     console.error("[Telegram] خطأ في الاتصال بالتيليجرام:", err);
   }
