@@ -101,7 +101,7 @@ async function notifyAdminTelegram(payload: any, status: 'SUCCESS' | 'FAILED', e
 📝 *ملاحظات:* \`${payload.note || 'لا يوجد'}\`
 ━━━━━━━━━━━━━━
 📊 *الحالة:* ${statusText}
-${extraInfo ? `\n⚠️ *تفاصيل إضافية:* ${extraInfo}` : ''}
+${extraInfo ? `\n⚠️ *تفاصيل إضافية:*\n\`\`\`json\n${extraInfo}\n\`\`\`` : ''}
   `.trim();
   
   try {
